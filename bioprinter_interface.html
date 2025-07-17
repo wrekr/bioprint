@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bioprinter Control Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e3f2fd;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .panel h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel h2::before {
+            content: '●';
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .file-upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #f8f9ff, #e3f2fd);
+        }
+
+        .file-upload-area:hover {
+            border-color: #764ba2;
+            background: linear-gradient(45deg, #e3f2fd, #f8f9ff);
+        }
+
+        .file-upload-area.dragover {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-upload-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .file-upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .file-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .control-btn {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-btn.primary {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .control-btn.danger {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            color: white;
+        }
+
+        .control-btn.warning {
+            background: linear-gradient(45deg, #ff9800, #f57c00);
+            color: white;
+        }
+
+        .control-btn.secondary {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .temperature-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .temp-control {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        .temp-control label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .temp-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .temp-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .status-panel {
+            grid-column: 1 / -1;
+            background: #2c3e50;
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .status-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .status-item h3 {
+            margin-bottom: 10px;
+            color: #ecf0f1;
+        }
+
+        .status-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .console {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+            border: 2px solid #333;
+        }
+
+        .console-input {
+            display: flex;
+            margin-top: 10px;
+            gap: 10px;
+        }
+
+        .console-input input {
+            flex: 1;
+            padding: 10px;
+            background: #2a2a2a;
+            border: 1px solid #555;
+            border-radius: 5px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+        }
+
+        .console-input button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .jog-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 200px;
+            margin: 0 auto;
+        }
+
+        .jog-btn {
+            padding: 10px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .jog-btn:hover {
+            background: #1976D2;
+            transform: scale(1.05);
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: #28a745;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .emergency-stop {
+            grid-column: 1 / -1;
+            background: #dc3545 !important;
+            color: white !important;
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 20px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .emergency-stop:hover {
+            background: #c82333 !important;
+            transform: scale(1.02);
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .temperature-controls {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧬 Bioprinter Control Interface</h1>
+            <p>Advanced 3D Bioprinting System - Marlin Firmware</p>
+        </div>
+
+        <div class="main-grid">
+            <!-- File Management Panel -->
+            <div class="panel">
+                <h2>G-Code File Management</h2>
+                <div class="file-upload-area" id="fileUploadArea">
+                    <p>📁 Drop G-code files here or click to upload</p>
+                    <button class="file-upload-btn" onclick="document.getElementById('fileInput').click()">
+                        Select G-Code File
+                    </button>
+                    <input type="file" id="fileInput" class="file-input" accept=".gcode,.g" multiple>
+                </div>
+                <div id="fileInfo" class="file-info" style="display: none;">
+                    <strong>Selected File:</strong> <span id="fileName"></span><br>
+                    <strong>Size:</strong> <span id="fileSize"></span><br>
+                    <strong>Lines:</strong> <span id="fileLines"></span>
+                </div>
+                <div class="controls-grid">
+                    <button class="control-btn primary" id="loadBtn" disabled>Load File</button>
+                    <button class="control-btn secondary" id="previewBtn" disabled>Preview</button>
+                </div>
+            </div>
+
+            <!-- Printer Controls Panel -->
+            <div class="panel">
+                <h2>Printer Controls</h2>
+                <div class="connection-status">
+                    <div class="status-indicator" id="connectionStatus"></div>
+                    <span id="connectionText">Disconnected</span>
+                    <button class="control-btn secondary" id="connectBtn" style="margin-left: auto;">Connect</button>
+                </div>
+                <div class="controls-grid">
+                    <button class="control-btn primary" id="startBtn" disabled>Start Print</button>
+                    <button class="control-btn warning" id="pauseBtn" disabled>Pause</button>
+                    <button class="control-btn danger" id="stopBtn" disabled>Stop</button>
+                    <button class="control-btn secondary" id="homeBtn" disabled>Home All</button>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div style="text-align: center; margin-top: 10px;">
+                    <span id="progressText">0% Complete</span>
+                </div>
+            </div>
+
+            <!-- Temperature Controls Panel -->
+            <div class="panel">
+                <h2>Temperature Control</h2>
+                <div class="temperature-controls">
+                    <div class="temp-control">
+                        <label for="extruderTemp">Extruder Temperature (°C)</label>
+                        <input type="number" id="extruderTemp" class="temp-input" min="0" max="300" value="37">
+                        <button class="control-btn secondary" onclick="setExtruderTemp()" style="margin-top: 10px; width: 100%;">Set</button>
+                    </div>
+                    <div class="temp-control">
+                        <label for="bedTemp">Bed Temperature (°C)</label>
+                        <input type="number" id="bedTemp" class="temp-input" min="0" max="150" value="25">
+                        <button class="control-btn secondary" onclick="setBedTemp()" style="margin-top: 10px; width: 100%;">Set</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manual Control Panel -->
+            <div class="panel">
+                <h2>Manual Jog Controls</h2>
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <label>Step Size: </label>
+                    <select id="stepSize">
+                        <option value="0.1">0.1mm</option>
+                        <option value="1" selected>1mm</option>
+                        <option value="10">10mm</option>
+                    </select>
+                </div>
+                <div class="jog-controls">
+                    <button class="jog-btn" onclick="jogAxis('Y', getStepSize())">Y+</button>
+                    <button class="jog-btn" onclick="jogAxis('Z', getStepSize())">Z+</button>
+                    <button class="jog-btn" onclick="jogAxis('Y', -getStepSize())">Y-</button>
+                    <button class="jog-btn" onclick="jogAxis('X', -getStepSize())">X-</button>
+                    <button class="jog-btn" onclick="jogAxis('X', 0, 'home')">HOME</button>
+                    <button class="jog-btn" onclick="jogAxis('X', getStepSize())">X+</button>
+                    <button class="jog-btn" onclick="jogAxis('Z', -getStepSize())">Z-</button>
+                    <button class="jog-btn" onclick="extrudeFilament(getStepSize())">E+</button>
+                    <button class="jog-btn" onclick="extrudeFilament(-getStepSize())">E-</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Panel -->
+        <div class="status-panel">
+            <h2 style="color: white; margin-bottom: 20px;">System Status</h2>
+            <div class="status-grid">
+                <div class="status-item">
+                    <h3>Extruder Temp</h3>
+                    <div class="status-value" id="currentExtruderTemp">--°C</div>
+                </div>
+                <div class="status-item">
+                    <h3>Bed Temp</h3>
+                    <div class="status-value" id="currentBedTemp">--°C</div>
+                </div>
+                <div class="status-item">
+                    <h3>Position X</h3>
+                    <div class="status-value" id="positionX">--</div>
+                </div>
+                <div class="status-item">
+                    <h3>Position Y</h3>
+                    <div class="status-value" id="positionY">--</div>
+                </div>
+                <div class="status-item">
+                    <h3>Position Z</h3>
+                    <div class="status-value" id="positionZ">--</div>
+                </div>
+                <div class="status-item">
+                    <h3>Print Time</h3>
+                    <div class="status-value" id="printTime">00:00:00</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Console Panel -->
+        <div class="panel" style="margin-top: 20px;">
+            <h2>Console</h2>
+            <div class="console" id="console"></div>
+            <div class="console-input">
+                <input type="text" id="commandInput" placeholder="Enter G-code command..." onkeypress="handleConsoleInput(event)">
+                <button onclick="sendCommand()">Send</button>
+                <button onclick="clearConsole()">Clear</button>
+            </div>
+        </div>
+
+        <!-- Emergency Stop -->
+        <button class="emergency-stop" onclick="emergencyStop()">
+            🚨 EMERGENCY STOP 🚨
+        </button>
+    </div>
+
+    <script>
+        // Global variables
+        let printerConnected = false;
+        let currentFile = null;
+        let printProgress = 0;
+        let printStartTime = null;
+        let printInterval = null;
+        let statusUpdateInterval = null;
+
+        // Initialize the interface
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeInterface();
+        });
+
+        function initializeInterface() {
+            setupFileUpload();
+            setupEventListeners();
+            updateConnectionStatus();
+            logToConsole('System initialized. Ready for operation.');
+        }
+
+        function setupFileUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const fileUploadArea = document.getElementById('fileUploadArea');
+
+            fileInput.addEventListener('change', handleFileSelect);
+            
+            fileUploadArea.addEventListener('dragover', handleDragOver);
+            fileUploadArea.addEventListener('dragleave', handleDragLeave);
+            fileUploadArea.addEventListener('drop', handleDrop);
+        }
+
+        function setupEventListeners() {
+            document.getElementById('connectBtn').addEventListener('click', toggleConnection);
+            document.getElementById('startBtn').addEventListener('click', startPrint);
+            document.getElementById('pauseBtn').addEventListener('click', pausePrint);
+            document.getElementById('stopBtn').addEventListener('click', stopPrint);
+            document.getElementById('homeBtn').addEventListener('click', homeAll);
+            document.getElementById('loadBtn').addEventListener('click', loadFile);
+            document.getElementById('previewBtn').addEventListener('click', previewFile);
+        }
+
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(event) {
+            event.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('dragover');
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        }
+
+        function processFile(file) {
+            if (!file.name.toLowerCase().endsWith('.gcode') && !file.name.toLowerCase().endsWith('.g')) {
+                alert('Please select a valid G-code file (.gcode or .g)');
+                return;
+            }
+
+            currentFile = file;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const lines = content.split('\n').length;
+                document.getElementById('fileLines').textContent = lines;
+                
+                document.getElementById('fileInfo').style.display = 'block';
+                document.getElementById('loadBtn').disabled = false;
+                document.getElementById('previewBtn').disabled = false;
+                
+                logToConsole(`File loaded: ${file.name} (${lines} lines)`);
+            };
+            reader.readAsText(file);
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function toggleConnection() {
+            const connectBtn = document.getElementById('connectBtn');
+            
+            if (!printerConnected) {
+                // Simulate connection process
+                connectBtn.disabled = true;
+                connectBtn.textContent = 'Connecting...';
+                
+                setTimeout(() => {
+                    printerConnected = true;
+                    updateConnectionStatus();
+                    connectBtn.textContent = 'Disconnect';
+                    connectBtn.disabled = false;
+                    logToConsole('Connected to printer successfully.');
+                    startStatusUpdates();
+                }, 2000);
+            } else {
+                printerConnected = false;
+                updateConnectionStatus();
+                connectBtn.textContent = 'Connect';
+                stopStatusUpdates();
+                logToConsole('Disconnected from printer.');
+            }
+        }
+
+        function updateConnectionStatus() {
+            const statusIndicator = document.getElementById('connectionStatus');
+            const connectionText = document.getElementById('connectionText');
+            const controls = document.querySelectorAll('.control-btn');
+            
+            if (printerConnected) {
+                statusIndicator.classList.add('connected');
+                connectionText.textContent = 'Connected';
+                controls.forEach(btn => {
+                    if (btn.id !== 'connectBtn') {
+                        btn.disabled = false;
+                    }
+                });
+            } else {
+                statusIndicator.classList.remove('connected');
+                connectionText.textContent = 'Disconnected';
+                controls.forEach(btn => {
+                    if (btn.id !== 'connectBtn') {
+                        btn.disabled = true;
+                    }
+                });
+            }
+        }
+
+        function startStatusUpdates() {
+            statusUpdateInterval = setInterval(() => {
+                // Simulate temperature readings
+                document.getElementById('currentExtruderTemp').textContent = 
+                    (35 + Math.random() * 5).toFixed(1) + '°C';
+                document.getElementById('currentBedTemp').textContent = 
+                    (23 + Math.random() * 3).toFixed(1) + '°C';
+                
+                // Simulate position updates
+                document.getElementById('positionX').textContent = 
+                    (Math.random() * 200).toFixed(2) + 'mm';
+                document.getElementById('positionY').textContent = 
+                    (Math.random() * 200).toFixed(2) + 'mm';
+                document.getElementById('positionZ').textContent = 
+                    (Math.random() * 100).toFixed(2) + 'mm';
+            }, 2000);
+        }
+
+        function stopStatusUpdates() {
+            if (statusUpdateInterval) {
+                clearInterval(statusUpdateInterval);
+                statusUpdateInterval = null;
+            }
+        }
+
+        function loadFile() {
+            if (!currentFile) return;
+            
+            logToConsole(`Loading file: ${currentFile.name}`);
+            logToConsole('File loaded into printer memory.');
+            document.getElementById('startBtn').disabled = false;
+        }
+
+        function previewFile() {
+            if (!currentFile) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const lines = content.split('\n').slice(0, 20); // Show first 20 lines
+                logToConsole('=== FILE PREVIEW ===');
+                lines.forEach(line => logToConsole(line));
+                logToConsole('=== END PREVIEW ===');
+            };
+            reader.readAsText(currentFile);
+        }
+
+        function startPrint() {
+            if (!currentFile) return;
+            
+            printProgress = 0;
+            printStartTime = Date.now();
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = false;
+            
+            logToConsole('Print started.');
+            
+            // Simulate print progress
+            printInterval = setInterval(() => {
+                printProgress += Math.random() * 2;
+                if (printProgress >= 100) {
+                    printProgress = 100;
+                    finishPrint();
+                }
+                updateProgress();
+            }, 1000);
+        }
+
+        function pausePrint() {
+            if (printInterval) {
+                clearInterval(printInterval);
+                printInterval = null;
+                document.getElementById('pauseBtn').textContent = 'Resume';
+                document.getElementById('pauseBtn').onclick = resumePrint;
+                logToConsole('Print paused.');
+            }
+        }
+
+        function resumePrint() {
+            startPrint();
+            document.getElementById('pauseBtn').textContent = 'Pause';
+            document.getElementById('pauseBtn').onclick = pausePrint;
+            logToConsole('Print resumed.');
+        }
+
+        function stopPrint() {
+            if (printInterval) {
+                clearInterval(printInterval);
+                printInterval = null;
+            }
+            
+            printProgress = 0;
+            printStartTime = null;
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = true;
+            
+            updateProgress();
+            logToConsole('Print stopped.');
+        }
+
+        function finishPrint() {
+            if (printInterval) {
+                clearInterval(printInterval);
+                printInterval = null;
+            }
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = true;
+            
+            logToConsole('Print completed successfully!');
+        }
+
+        function updateProgress() {
+            document.getElementById('progressFill').style.width = printProgress + '%';
+            document.getElementById('progressText').textContent = printProgress.toFixed(1) + '% Complete';
+            
+            if (printStartTime) {
+                const elapsed = Date.now() - printStartTime;
+                const hours = Math.floor(elapsed / 3600000);
+                const minutes = Math.floor((elapsed % 3600000) / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                document.getElementById('printTime').textContent = 
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+
+        function homeAll() {
+            logToConsole('Homing all axes...');
+            sendGCode('G28');
+        }
+
+        function setExtruderTemp() {
+            const temp = document.getElementById('extruderTemp').value;
+            sendGCode(`M104 S${temp}`);
+            logToConsole(`Setting extruder temperature to ${temp}°C`);
+        }
+
+        function setBedTemp() {
+            const temp = document.getElementById('bedTemp').value;
+            sendGCode(`M140 S${temp}`);
+            logToConsole(`Setting bed temperature to ${temp}°C`);
+        }
+
+        function getStepSize() {
+            return parseFloat(document.getElementById('stepSize').value);
+        }
+
+        function jogAxis(axis, distance, action) {
+            if (action === 'home') {
+                sendGCode(`G28 ${axis}`);
+                logToConsole(`Homing ${axis} axis`);
+            } else {
+                sendGCode(`G91`); // Relative positioning
+                sendGCode(`G1 ${axis}${distance} F3000`);
+                sendGCode(`G90`); // Absolute positioning
+                logToConsole(`Jogging ${axis} axis by ${distance}mm`);
+            }
+        }
+
+        function extrudeFilament(distance) {
+            sendGCode(`G91`); // Relative positioning
+            sendGCode(`G1 E${distance} F300`);
+            sendGCode(`G90`); // Absolute positioning
+            logToConsole(`Extruding ${distance}mm of filament`);
+        }
+
+      // Missing JavaScript functions to complete the bioprinter interface
+
+// Complete the sendGCode function (was cut off)
+function sendGCode(command) {
+    if (!printerConnected) {
+        logToConsole('Error: Printer not connected');
+        return;
+    }
+    
+    logToConsole(`> ${command}`);
+    
+    // Send command via serial if connected
+    if (serialPort && serialPort.writable) {
+        const writer = serialPort.writable.getWriter();
+        writer.write(new TextEncoder().encode(command + '\n'));
+        writer.releaseLock();
+    } else {
+        // Fallback simulation
+        setTimeout(() => {
+            logToConsole(`< ok`);
+        }, 100);
+    }
+}
+
+// Console functions
+function handleConsoleInput(event) {
+    if (event.key === 'Enter') {
+        sendCommand();
+    }
+}
+
+function sendCommand() {
+    const input = document.getElementById('commandInput');
+    const command = input.value.trim();
+    
+    if (command) {
+        sendGCode(command);
+        input.value = '';
+    }
+}
+
+function clearConsole() {
+    document.getElementById('console').innerHTML = '';
+}
+
+function logToConsole(message) {
+    const console = document.getElementById('console');
+    const timestamp = new Date().toLocaleTimeString();
+    const logEntry = document.createElement('div');
+    logEntry.innerHTML = `<span style="color: #666;">[${timestamp}]</span> ${message}`;
+    console.appendChild(logEntry);
+    console.scrollTop = console.scrollHeight;
+}
+
+function emergencyStop() {
+    if (confirm('Are you sure you want to execute an emergency stop?')) {
+        sendGCode('M112'); // Emergency stop G-code
+        stopPrint();
+        logToConsole('🚨 EMERGENCY STOP EXECUTED 🚨');
+    }
+}
+
+// ========================================
+// SERIAL COMMUNICATION IMPLEMENTATION
+// ========================================
+
+let serialPort = null;
+let reader = null;
+let writer = null;
+
+// Check for Web Serial API support
+function checkSerialSupport() {
+    if ('serial' in navigator) {
+        return true;
+    } else {
+        logToConsole('Web Serial API not supported. Please use Chrome/Edge 89+ or enable experimental features.');
+        return false;
+    }
+}
+
+// Request serial port access
+async function requestSerialPort() {
+    try {
+        // Request port with filters for common Arduino/Marlin boards
+        const port = await navigator.serial.requestPort({
+            filters: [
+                { usbVendorId: 0x2341 }, // Arduino
+                { usbVendorId: 0x1a86 }, // CH340
+                { usbVendorId: 0x0403 }, // FTDI
+                { usbVendorId: 0x10c4 }, // CP210x
+            ]
+        });
+        return port;
+    } catch (err) {
+        logToConsole('Error requesting serial port: ' + err.message);
+        return null;
+    }
+}
+
+// Connect to serial port
+async function connectSerial() {
+    if (!checkSerialSupport()) return false;
+    
+    try {
+        if (!serialPort) {
+            serialPort = await requestSerialPort();
+            if (!serialPort) return false;
+        }
+        
+        // Open the port with appropriate settings for Marlin
+        await serialPort.open({ 
+            baudRate: 115200,  // Standard Marlin baud rate
+            dataBits: 8,
+            stopBits: 1,
+            parity: 'none',
+            flowControl: 'none'
+        });
+        
+        // Start reading from the serial port
+        startSerialReader();
+        
+        logToConsole('Serial connection established at 115200 baud');
+        return true;
+        
+    } catch (err) {
+        logToConsole('Error connecting to serial port: ' + err.message);
+        return false;
+    }
+}
+
+// Start reading from serial port
+async function startSerialReader() {
+    if (!serialPort || !serialPort.readable) return;
+    
+    reader = serialPort.readable.getReader();
+    let buffer = '';
+    
+    try {
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            
+            // Convert bytes to string and add to buffer
+            const text = new TextDecoder().decode(value);
+            buffer += text;
+            
+            // Process complete lines
+            const lines = buffer.split('\n');
+            buffer = lines.pop(); // Keep incomplete line in buffer
+            
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                if (trimmed) {
+                    processSerialResponse(trimmed);
+                }
+            });
+        }
+    } catch (err) {
+        logToConsole('Serial read error: ' + err.message);
+    } finally {
+        if (reader) {
+            reader.releaseLock();
+            reader = null;
+        }
+    }
+}
+
+// Process responses from the printer
+function processSerialResponse(response) {
+    logToConsole(`< ${response}`);
+    
+    // Parse temperature reports
+    if (response.includes('T:')) {
+        parseTemperatureReport(response);
+    }
+    
+    // Parse position reports
+    if (response.includes('X:') && response.includes('Y:') && response.includes('Z:')) {
+        parsePositionReport(response);
+    }
+    
+    // Handle errors
+    if (response.toLowerCase().includes('error')) {
+        logToConsole(`❌ ${response}`);
+    }
+    
+    // Handle completion messages
+    if (response.includes('Done printing file')) {
+        finishPrint();
+    }
+}
+
+// Parse temperature reports (M105 response)
+function parseTemperatureReport(response) {
+    const extruderMatch = response.match(/T:(\d+\.?\d*)/);
+    const bedMatch = response.match(/B:(\d+\.?\d*)/);
+    
+    if (extruderMatch) {
+        document.getElementById('currentExtruderTemp').textContent = extruderMatch[1] + '°C';
+    }
+    
+    if (bedMatch) {
+        document.getElementById('currentBedTemp').textContent = bedMatch[1] + '°C';
+    }
+}
+
+// Parse position reports (M114 response)
+function parsePositionReport(response) {
+    const xMatch = response.match(/X:(-?\d+\.?\d*)/);
+    const yMatch = response.match(/Y:(-?\d+\.?\d*)/);
+    const zMatch = response.match(/Z:(-?\d+\.?\d*)/);
+    
+    if (xMatch) {
+        document.getElementById('positionX').textContent = xMatch[1] + 'mm';
+    }
+    
+    if (yMatch) {
+        document.getElementById('positionY').textContent = yMatch[1] + 'mm';
+    }
+    
+    if (zMatch) {
+        document.getElementById('positionZ').textContent = zMatch[1] + 'mm';
+    }
+}
+
+// Disconnect from serial port
+async function disconnectSerial() {
+    try {
+        if (reader) {
+            await reader.cancel();
+            reader = null;
+        }
+        
+        if (serialPort) {
+            await serialPort.close();
+            serialPort = null;
+        }
+        
+        logToConsole('Serial connection closed');
+        return true;
+        
+    } catch (err) {
+        logToConsole('Error disconnecting: ' + err.message);
+        return false;
+    }
+}
+
+// Send G-code command via serial
+async function sendSerialCommand(command) {
+    if (!serialPort || !serialPort.writable) {
+        logToConsole('Error: Serial port not available');
+        return false;
+    }
+    
+    try {
+        const writer = serialPort.writable.getWriter();
+        await writer.write(new TextEncoder().encode(command + '\n'));
+        writer.releaseLock();
+        return true;
+    } catch (err) {
+        logToConsole('Error sending command: ' + err.message);
+        return false;
+    }
+}
+
+// Modified toggleConnection function to use serial
+async function toggleConnection() {
+    const connectBtn = document.getElementById('connectBtn');
+    
+    if (!printerConnected) {
+        connectBtn.disabled = true;
+        connectBtn.textContent = 'Connecting...';
+        
+        const connected = await connectSerial();
+        
+        if (connected) {
+            printerConnected = true;
+            updateConnectionStatus();
+            connectBtn.textContent = 'Disconnect';
+            
+            // Send initial commands to get printer info
+            setTimeout(() => {
+                sendGCode('M115'); // Get firmware info
+                sendGCode('M105'); // Get temperature
+                sendGCode('M114'); // Get position
+            }, 1000);
+            
+            // Start periodic status updates
+            startPeriodicUpdates();
+        } else {
+            connectBtn.textContent = 'Connect';
+        }
+        
+        connectBtn.disabled = false;
+        
+    } else {
+        await disconnectSerial();
+        printerConnected = false;
+        updateConnectionStatus();
+        connectBtn.textContent = 'Connect';
+        stopPeriodicUpdates();
+    }
+}
+
+// Periodic status updates
+let periodicUpdateInterval = null;
+
+function startPeriodicUpdates() {
+    periodicUpdateInterval = setInterval(() => {
+        if (printerConnected) {
+            sendGCode('M105'); // Temperature
+            sendGCode('M114'); // Position
+        }
+    }, 5000); // Every 5 seconds
+}
+
+function stopPeriodicUpdates() {
+    if (periodicUpdateInterval) {
+        clearInterval(periodicUpdateInterval);
+        periodicUpdateInterval = null;
+    }
+}
+
+// Enhanced file upload for real printing
+function loadFile() {
+    if (!currentFile || !printerConnected) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const gcode = e.target.result;
+        const lines = gcode.split('\n');
+        
+        logToConsole(`Loading ${lines.length} lines of G-code...`);
+        
+        // Store the G-code for printing
+        window.currentGCode = lines.filter(line => line.trim() && !line.trim().startsWith(';'));
+        
+        document.getElementById('startBtn').disabled = false;
+        logToConsole('File loaded and ready for printing');
+    };
+    reader.readAsText(currentFile);
+}
+
+// Enhanced print function for real G-code execution
+let currentLineIndex = 0;
+let printingActive = false;
+
+function startPrint() {
+    if (!window.currentGCode || !printerConnected) return;
+    
+    printingActive = true;
+    currentLineIndex = 0;
+    printProgress = 0;
+    printStartTime = Date.now();
+    
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('pauseBtn').disabled = false;
+    document.getElementById('stopBtn').disabled = false;
+    
+    logToConsole('Starting print job...');
+    
+    // Start sending G-code lines
+    sendNextGCodeLine();
+}
+
+function sendNextGCodeLine() {
+    if (!printingActive || !window.currentGCode || currentLineIndex >= window.currentGCode.length) {
+        finishPrint();
+        return;
+    }
+    
+    const line = window.currentGCode[currentLineIndex];
+    sendGCode(line);
+    
+    currentLineIndex++;
+    printProgress = (currentLineIndex / window.currentGCode.length) * 100;
+    updateProgress();
+    
+    // Continue to next line after a small delay
+    setTimeout(sendNextGCodeLine, 50); // 50ms between commands
+}
+
+function pausePrint() {
+    printingActive = false;
+    sendGCode('M25'); // Pause SD print (if applicable)
+    document.getElementById('pauseBtn').textContent = 'Resume';
+    document.getElementById('pauseBtn').onclick = resumePrint;
+    logToConsole('Print paused.');
+}
+
+function resumePrint() {
+    printingActive = true;
+    sendGCode('M24'); // Resume SD print (if applicable)
+    document.getElementById('pauseBtn').textContent = 'Pause';
+    document.getElementById('pauseBtn').onclick = pausePrint;
+    logToConsole('Print resumed.');
+    sendNextGCodeLine();
+}
+
+function stopPrint() {
+    printingActive = false;
+    sendGCode('M25'); // Pause print
+    sendGCode('M104 S0'); // Turn off extruder
+    sendGCode('M140 S0'); // Turn off bed
+    sendGCode('G28 X Y'); // Home X and Y
+    
+    printProgress = 0;
+    currentLineIndex = 0;
+    printStartTime = null;
+    
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('pauseBtn').disabled = true;
+    document.getElementById('stopBtn').disabled = true;
+    
+    updateProgress();
+    logToConsole('Print stopped and printer reset.');
+}
+
+// Initialize serial support check on page load
+document.addEventListener('DOMContentLoaded', function() {
+    checkSerialSupport();
+    initializeInterface();
+});
+ </script>
+</body>
+</html>
